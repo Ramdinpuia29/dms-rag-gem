@@ -4,6 +4,7 @@ from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores.types import MetadataFilters, ExactMatchFilter
 from sqlalchemy import create_engine, make_url
+from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import settings
 from app.utils.parsers import parse_file
 import logging
@@ -26,6 +27,15 @@ _engine = create_engine(
     max_overflow=10,
     pool_recycle=3600
 )
+
+# Convert sync URL to async (psycopg2 -> asyncpg)
+_async_url = settings.DATABASE_URL.replace("psycopg2", "asyncpg")
+_async_engine = create_async_engine(
+    _async_url,
+    pool_size=5,
+    max_overflow=10
+)
+
 _vector_store = None
 
 def get_vector_store():
@@ -33,6 +43,7 @@ def get_vector_store():
     if _vector_store is None:
         _vector_store = PGVectorStore(
             engine=_engine,
+            async_engine=_async_engine,
             table_name="documents",
             embed_dim=384,  # bge-small-en-v1.5 dimension
             hybrid_search=True,
