@@ -34,7 +34,10 @@ class RAGService:
         self._cache: redis_lib.Redis | None = None
 
     def initialize(self):
-        Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+        Settings.embed_model = HuggingFaceEmbedding(
+            model_name=settings.EMBED_MODEL,
+            embed_batch_size=settings.EMBED_BATCH_SIZE
+        )
         Settings.llm = Ollama(
             model=settings.MODEL_NAME,
             base_url=settings.OLLAMA_URL,

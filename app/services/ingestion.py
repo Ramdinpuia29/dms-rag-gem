@@ -3,7 +3,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores.types import MetadataFilters, ExactMatchFilter
-from sqlalchemy import make_url
+from sqlalchemy import create_engine, make_url
 from app.core.config import settings
 from app.utils.parsers import parse_file
 import logging
@@ -13,24 +13,28 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global models for reuse
-embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+# Global models and engine for reuse
+embed_model = HuggingFaceEmbedding(
+    model_name=settings.EMBED_MODEL,
+    embed_batch_size=settings.EMBED_BATCH_SIZE
+)
 node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
+_engine = create_engine(
+    settings.DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_recycle=3600
+)
 _vector_store = None
 
 def get_vector_store():
     global _vector_store
     if _vector_store is None:
-        url = make_url(settings.DATABASE_URL)
-        _vector_store = PGVectorStore.from_params(
-            host=url.host,
-            port=url.port,
-            database=url.database,
-            user=url.username,
-            password=url.password,
+        _vector_store = PGVectorStore(
+            engine=_engine,
             table_name="documents",
-            embed_dim=1024,
+            embed_dim=384,  # bge-small-en-v1.5 dimension
             hybrid_search=True,
             text_search_config="simple",
         )

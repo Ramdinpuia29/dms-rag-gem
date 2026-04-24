@@ -36,7 +36,7 @@ services:
     networks:
       - rag-network
     # Wait for ollama to be ready, then pull only if model absent.
-    entrypoint: /bin/sh -c "ollama serve & until ollama list 2>/dev/null; do sleep 1; done && ollama list | grep -q llama3 || ollama pull llama3 && wait"
+    entrypoint: /bin/sh -c "ollama serve & until ollama list 2>/dev/null; do sleep 1; done && ollama list | grep -q phi3:mini || ollama pull phi3:mini && wait"
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s

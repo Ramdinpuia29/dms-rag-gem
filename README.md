@@ -1,13 +1,15 @@
 # Local RAG Microservice
 
-A production-ready, **100% local** Retrieval-Augmented Generation (RAG) microservice. Provides a robust API for ingesting documents, performing hybrid searches, and generating citation-backed answers using local LLMs and embedding models.
+A production-ready, **100% local** Retrieval-Augmented Generation (RAG) microservice. Optimized for **edge devices** (Jetson, Raspberry Pi 5) with lighter model profiles and high-performance ingestion.
 
 ## Key Features
 
 - **100% Local & Private:** No external AI APIs. All data stays on your infrastructure.
-- **Multilingual Support:** `BAAI/bge-m3` embeddings across English, Hindi, Mizo, and more.
+- **Edge Optimized:** Low VRAM footprint using `phi3:mini` (3.8B) and small embeddings.
+- **Batch Embedding:** High-throughput ingestion using chunk-batching (default: 32).
+- **Persistent Connection Pooling:** Optimized PostgreSQL connections for high-concurrency tasks.
 - **Hybrid Vector Search:** PostgreSQL + `pgvector` with dense + sparse retrieval.
-- **Cross-Encoder Reranking:** `BAAI/bge-reranker-v2-m3` for high-precision result ordering.
+- **Cross-Encoder Reranking:** Precision result ordering using `bge-reranker-base`.
 - **Query Result Caching:** Redis cache on `ask` responses — repeated queries skip retrieval + LLM entirely.
 - **Multi-Format Ingestion:** PDF, DOCX, XLSX, CSV, TXT, MD, PNG, JPG (max 50 MB).
 - **OCR Integration:** Tesseract OCR for scanned PDFs and images.
@@ -21,11 +23,11 @@ A production-ready, **100% local** Retrieval-Augmented Generation (RAG) microser
 |---|---|
 | API | FastAPI + Uvicorn |
 | Vector DB | PostgreSQL + pgvector |
-| LLM | Ollama (local) |
+| LLM | Ollama (phi3:mini) |
 | RAG Orchestration | LlamaIndex |
 | Task Queue | Celery + Redis |
-| Embeddings | `BAAI/bge-m3` (1024-dim) |
-| Reranker | `BAAI/bge-reranker-v2-m3` |
+| Embeddings | `BAAI/bge-small-en-v1.5` (384-dim) |
+| Reranker | `BAAI/bge-reranker-base` |
 | Parsing / OCR | PyMuPDF, Unstructured, Tesseract |
 
 ## Architecture
@@ -40,7 +42,7 @@ FastAPI App ──── Redis (Celery broker + query cache)
   │                │
   └──────► PostgreSQL / pgvector
                    ▲
-               Ollama (LLM)
+               Ollama (phi3:mini)
 ```
 
 Five components:
@@ -48,7 +50,7 @@ Five components:
 1. **FastAPI App** — REST API, RAG pipeline, cached retriever/query engines
 2. **Celery Worker** — async ingestion (parse → chunk → embed → store), retries on failure
 3. **PostgreSQL (pgvector)** — stores document chunks + vector embeddings
-4. **Ollama** — local LLM inference (Llama 3)
+4. **Ollama** — local LLM inference (phi3:mini)
 5. **Redis** — Celery broker + query result cache (TTL configurable)
 
 Shared Docker volume (`uploads_data`) passes uploaded files between API and Worker. Model weights cached in persistent volume to avoid re-downloads.
@@ -124,7 +126,7 @@ docker run -d -e POSTGRES_PASSWORD=postgres -p 5432:5432 ankane/pgvector:latest
 #### 4. Ollama
 ```bash
 ollama serve
-ollama pull llama3
+ollama pull phi3:mini
 ```
 
 #### 5. Run
@@ -140,12 +142,13 @@ celery -A app.worker.tasks worker --loglevel=info
 
 | Variable | Default | Description |
 |---|---|---|
-| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL |
-| `DATABASE_URL` | `postgresql+psycopg2://postgres:postgres@localhost:5432/dms_rag` | PostgreSQL connection |
-| `OLLAMA_URL` | `http://localhost:11434` | Ollama base URL |
-| `MODEL_NAME` | `llama3` | Ollama model to use |
-| `EMBED_MODEL` | `BAAI/bge-m3` | HuggingFace embedding model |
-| `RERANK_MODEL` | `BAAI/bge-reranker-v2-m3` | Cross-encoder reranker model |
+| `REDIS_URL` | `redis://redis:6379/0` | Redis connection URL |
+| `DATABASE_URL` | `postgresql+psycopg2://postgres:postgres@postgres:5432/dms_rag` | PostgreSQL connection |
+| `OLLAMA_URL` | `http://ollama:11434` | Ollama base URL |
+| `MODEL_NAME` | `phi3:mini` | Ollama model to use |
+| `EMBED_MODEL` | `BAAI/bge-small-en-v1.5` | HuggingFace embedding model |
+| `RERANK_MODEL` | `BAAI/bge-reranker-base` | Cross-encoder reranker model |
+| `EMBED_BATCH_SIZE` | `32` | Chunks to embed in a single pass |
 | `UPLOAD_DIR` | `/app/uploads` | Temporary upload directory |
 | `QUERY_CACHE_TTL` | `3600` | Query result cache TTL in seconds |
 | `HF_TOKEN` | — | Hugging Face read token |
@@ -218,6 +221,8 @@ Reports status of Redis, PostgreSQL, and Ollama.
 ## Performance Notes
 
 - **Retriever + query engines** built once at startup and reused across all requests (no per-request reconstruction).
+- **Persistent Connection Pooling** — SQLAlchemy engine reuses connections to avoid PostgreSQL handshake overhead.
+- **Batch Embedding** — processes 32 chunks per model call to maximize GPU/NPU utilization.
 - **Query cache** — `ask` responses stored in Redis keyed by MD5 hash of the query. Cache miss triggers full retrieval + rerank + LLM; hit returns instantly.
 - **Streaming** uses `asyncio.Queue` + `run_in_executor` so sync generator (retrieval, LLM tokens) runs in a thread pool without blocking the event loop.
 - **Vector store** singleton — single `PGVectorStore` connection shared across ingestion and delete operations.
