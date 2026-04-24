@@ -49,12 +49,14 @@ services:
     volumes:
       - .:/app
       - uploads_data:/app/uploads
+      - hf_cache:/root/.cache/huggingface
     networks:
       - rag-network
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/dms_rag
       - OLLAMA_URL=http://ollama:11434
+      - HF_HOME=/root/.cache/huggingface
     ports:
       - "8000:8000"
     depends_on:
@@ -71,11 +73,13 @@ services:
     volumes:
       - .:/app
       - uploads_data:/app/uploads
+      - hf_cache:/root/.cache/huggingface
     networks:
       - rag-network
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/dms_rag
+      - HF_HOME=/root/.cache/huggingface
     depends_on:
       redis:
         condition: service_healthy
@@ -90,3 +94,4 @@ volumes:
   postgres_data:
   ollama_data:
   uploads_data:
+  hf_cache:
