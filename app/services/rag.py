@@ -1,4 +1,4 @@
-from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core import VectorStoreIndex
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.postprocessor.sbert_rerank import SentenceTransformerRerank
@@ -12,17 +12,23 @@ class RAGService:
         self.vector_store = None
         self.index = None
         self.reranker = None
+        self.embed_model = None
+        self.llm = None
 
     def initialize(self):
         """
         Initializes the RAG service components.
         """
-        # Ensure global settings are consistent
-        Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
-        Settings.llm = Ollama(model=settings.MODEL_NAME, base_url=settings.OLLAMA_URL, request_timeout=120.0)
+        # Explicitly instantiate models
+        self.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+        self.llm = Ollama(model=settings.MODEL_NAME, base_url=settings.OLLAMA_URL, request_timeout=120.0)
         
         self.vector_store = get_vector_store()
-        self.index = VectorStoreIndex.from_vector_store(self.vector_store)
+        # Pass embed_model explicitly
+        self.index = VectorStoreIndex.from_vector_store(
+            self.vector_store,
+            embed_model=self.embed_model
+        )
         
         self.reranker = SentenceTransformerRerank(
             model=settings.RERANK_MODEL, 
@@ -64,11 +70,12 @@ class RAGService:
             vector_store_query_mode="hybrid"
         )
         
-        # Build query engine with reranker
+        # Build query engine with reranker and explicit llm
         query_engine = RetrieverQueryEngine.from_args(
             retriever=retriever,
             node_postprocessors=[self.reranker],
-            system_prompt=system_prompt
+            system_prompt=system_prompt,
+            llm=self.llm
         )
         
         response = query_engine.query(query)
@@ -104,12 +111,13 @@ class RAGService:
             vector_store_query_mode="hybrid"
         )
         
-        # Build query engine with streaming enabled
+        # Build query engine with streaming enabled and explicit llm
         query_engine = RetrieverQueryEngine.from_args(
             retriever=retriever,
             node_postprocessors=[self.reranker],
             system_prompt=system_prompt,
-            streaming=True
+            streaming=True,
+            llm=self.llm
         )
         
         streaming_response = query_engine.query(query)
