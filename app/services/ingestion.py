@@ -25,6 +25,7 @@ def get_vector_store():
         client=client, 
         collection_name="documents",
         enable_hybrid=True,
+        fastembed_sparse_model="Qdrant/bm25",
         batch_size=20
     )
 
@@ -73,7 +74,16 @@ def delete_document(document_id: str):
         client = QdrantClient(url=settings.QDRANT_URL)
         client.delete(
             collection_name="documents",
-            points_selector={"must": [{"key": "document_id", "match": {"value": document_id}}]}
+            points_selector=models.FilterSelector(
+                filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="document_id",
+                            match=models.MatchValue(value=document_id),
+                        ),
+                    ],
+                )
+            )
         )
         logger.info(f"Successfully deleted document: {document_id}")
         return {"status": "success", "document_id": document_id}
