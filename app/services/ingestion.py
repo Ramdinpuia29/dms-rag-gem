@@ -56,3 +56,19 @@ def ingest_document(file_path: str, metadata: dict):
     except Exception as e:
         logger.error(f"Error ingesting document {file_path}: {str(e)}")
         raise e
+
+def delete_document(document_id: str):
+    """
+    Deletes a document from Qdrant by its document_id metadata.
+    """
+    try:
+        client = QdrantClient(url=settings.QDRANT_URL)
+        client.delete(
+            collection_name="documents",
+            points_selector={"must": [{"key": "document_id", "match": {"value": document_id}}]}
+        )
+        logger.info(f"Successfully deleted document: {document_id}")
+        return {"status": "success", "document_id": document_id}
+    except Exception as e:
+        logger.error(f"Error deleting document {document_id}: {str(e)}")
+        raise e

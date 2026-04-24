@@ -211,13 +211,13 @@ Call ingestion service to process and store document.
 **Files:**
 - Create: `app/services/rag.py`
 
-- [ ] **Step 1: Implement Hybrid Search**
+- [x] **Step 1: Implement Hybrid Search**
 Use LlamaIndex `VectorIndexRetriever` with Qdrant Hybrid search enabled.
 
-- [ ] **Step 2: Implement Reranking**
+- [x] **Step 2: Implement Reranking**
 Use `SentenceTransformerRerank` with `BAAI/bge-reranker-v2-m3`.
 
-- [ ] **Step 3: Implement Q&A with Ollama**
+- [x] **Step 3: Implement Q&A with Ollama**
 Configure `Ollama` LLM. Write the strict system prompt.
 
 ---
@@ -229,11 +229,12 @@ Configure `Ollama` LLM. Write the strict system prompt.
 - Create: `app/api/v1/search.py`
 - Create: `app/api/v1/ask.py`
 
-- [ ] **Step 1: Implement Ingest Endpoint**
+- [x] **Step 1: Implement Ingest Endpoint**
 Accept file, save temp, trigger celery.
 
-- [ ] **Step 2: Implement Search & Ask Endpoints**
+- [x] **Step 2: Implement Search & Ask Endpoints**
 Call RAG service.
 
-- [ ] **Step 3: Implement Status & Delete Endpoints**
+- [x] **Step 3: Implement Status & Delete Endpoints**
 Check celery result and remove from Qdrant.
+
