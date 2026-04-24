@@ -20,3 +20,4 @@ python-dotenv
 pydantic-settings
 httpx
 requests
+aiofiles

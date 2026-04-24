@@ -17,19 +17,24 @@ logger = logging.getLogger(__name__)
 embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
 node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
+_vector_store = None
+
 def get_vector_store():
-    url = make_url(settings.DATABASE_URL)
-    return PGVectorStore.from_params(
-        host=url.host,
-        port=url.port,
-        database=url.database,
-        user=url.username,
-        password=url.password,
-        table_name="documents",
-        embed_dim=1024,  # BGE-M3 dimension
-        hybrid_search=True,
-        text_search_config="simple" # Changed from "english"
-    )
+    global _vector_store
+    if _vector_store is None:
+        url = make_url(settings.DATABASE_URL)
+        _vector_store = PGVectorStore.from_params(
+            host=url.host,
+            port=url.port,
+            database=url.database,
+            user=url.username,
+            password=url.password,
+            table_name="documents",
+            embed_dim=1024,
+            hybrid_search=True,
+            text_search_config="simple",
+        )
+    return _vector_store
 
 def ingest_document(file_path: str, metadata: dict):
     """

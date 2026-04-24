@@ -1,13 +1,16 @@
+import asyncio
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.api.v1 import documents, search, ask, health
 from app.services.rag import rag_service
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize services
-    rag_service.initialize()
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, rag_service.initialize)
     yield
+
 
 app = FastAPI(title="RAG Microservice", lifespan=lifespan)
 
