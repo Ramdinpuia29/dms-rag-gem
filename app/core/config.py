@@ -9,5 +9,6 @@ class Settings(BaseSettings):
     RERANK_MODEL: str = "BAAI/bge-reranker-v2-m3"
     UPLOAD_DIR: str = "/app/uploads"
     QUERY_CACHE_TTL: int = 3600
+    LLM_REQUEST_TIMEOUT: float = 300.0
 
 settings = Settings()

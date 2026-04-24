@@ -38,7 +38,7 @@ class RAGService:
         Settings.llm = Ollama(
             model=settings.MODEL_NAME,
             base_url=settings.OLLAMA_URL,
-            request_timeout=120.0,
+            request_timeout=settings.LLM_REQUEST_TIMEOUT,
         )
 
         self.embed_model = Settings.embed_model

@@ -5,6 +5,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 from app.services.rag import rag_service
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -16,8 +17,13 @@ class AskRequest(BaseModel):
 @router.post("/")
 async def ask_api(request: AskRequest):
     try:
-        response = await run_in_threadpool(rag_service.ask, request.query)
+        response = await asyncio.wait_for(
+            run_in_threadpool(rag_service.ask, request.query),
+            timeout=settings.LLM_REQUEST_TIMEOUT,
+        )
         return response
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail=f"LLM did not respond within {settings.LLM_REQUEST_TIMEOUT}s")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
