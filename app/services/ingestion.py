@@ -22,6 +22,7 @@ def init_ingestion_settings():
 
 def get_vector_store():
     url = make_url(settings.DATABASE_URL)
+    embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
     return PGVectorStore.from_params(
         host=url.host,
         port=url.port,
@@ -31,7 +32,8 @@ def get_vector_store():
         table_name="documents",
         embed_dim=1024,  # BGE-M3 dimension
         hybrid_search=True,
-        text_search_config="english"
+        text_search_config="english",
+        embed_model=embed_model
     )
 
 def ingest_document(file_path: str, metadata: dict):
