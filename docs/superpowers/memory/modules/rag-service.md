@@ -5,11 +5,11 @@
 
 ## Roles
 - `RAGService`: Singleton service handling vector search, reranking, and LLM querying.
-- `Settings.embed_model`: Global configuration for the embedding model (BGE-M3).
-- `Settings.llm`: Global configuration for the LLM (Ollama/Llama3).
+- `self.embed_model`: Locally managed `HuggingFaceEmbedding` (BGE-M3).
+- `self.llm`: Locally managed `Ollama` instance (Llama3).
 
 ## Key Procedures
-- `initialize()`: Sets up global `llama_index` settings and vector store connection.
+- `initialize()`: Sets up model instances and vector store connection. **Crucially, it avoids global `llama_index.core.Settings` mutation to ensure thread safety.**
 - `ask(query)`: Synchronous query-response with citations.
 - `ask_stream(query)`: Streaming response using SSE (Server-Sent Events).
 

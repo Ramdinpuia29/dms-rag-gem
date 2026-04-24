@@ -11,3 +11,5 @@ Canonical memory for the 100% local RAG microservice.
 
 ## Decisions
 - [pgvector Stack](decisions/pgvector-stack.md) - Use of PostgreSQL and pgvector for local vector storage.
+- [Mizo Search Config](decisions/mizo-search-config.md) - Simple text search to support Mizo.
+- [Thread-Safe Injection](decisions/thread-safe-injection.md) - Avoiding global LlamaIndex Settings.
