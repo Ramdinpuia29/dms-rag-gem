@@ -2,7 +2,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-04-24-ask-streaming-design.md`
 **Date:** 2026-04-24
-**Status:** Draft
+**Status:** Approved
 
 ---
 
