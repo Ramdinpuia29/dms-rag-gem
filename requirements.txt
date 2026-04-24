@@ -10,6 +10,7 @@ llama-index-embeddings-huggingface
 llama-index-llms-ollama
 llama-index-postprocessor-cohere # Using local reranker instead
 sentence-transformers
+fastembed
 pymupdf
 pytesseract
 unstructured[all-docs]

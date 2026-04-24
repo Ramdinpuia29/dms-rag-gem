@@ -17,7 +17,12 @@ Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
 def get_vector_store():
     client = QdrantClient(url=settings.QDRANT_URL)
-    return QdrantVectorStore(client=client, collection_name="documents")
+    return QdrantVectorStore(
+        client=client, 
+        collection_name="documents",
+        enable_hybrid=True,
+        batch_size=20
+    )
 
 def ingest_document(file_path: str, metadata: dict):
     """

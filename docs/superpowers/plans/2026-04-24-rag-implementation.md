@@ -195,13 +195,13 @@ def ingest_document_task(file_path: str, metadata: dict):
 - Create: `app/services/ingestion.py`
 - Create: `app/utils/parsers.py`
 
-- [ ] **Step 1: Implement Document Parsers**
+- [x] **Step 1: Implement Document Parsers**
 Use PyMuPDF for PDF, Unstructured for others. Add Tesseract OCR for images.
 
-- [ ] **Step 2: Implement Embedding & Vector Store Logic**
+- [x] **Step 2: Implement Embedding & Vector Store Logic**
 Configure `HuggingFaceEmbedding` with `BAAI/bge-m3`. Configure `QdrantVectorStore`.
 
-- [ ] **Step 3: Update Worker Task**
+- [x] **Step 3: Update Worker Task**
 Call ingestion service to process and store document.
 
 ---
