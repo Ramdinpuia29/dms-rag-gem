@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-multipart
+celery
+redis
+qdrant-client
+llama-index
+llama-index-vector-stores-qdrant
+llama-index-embeddings-huggingface
+llama-index-llms-ollama
+llama-index-postprocessor-cohere # Using local reranker instead
+sentence-transformers
+pymupdf
+pytesseract
+unstructured[all-docs]
+python-dotenv
+pydantic-settings
