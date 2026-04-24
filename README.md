@@ -85,6 +85,18 @@ Shared Docker volume (`uploads_data`) passes uploaded files between API and Work
     - Swagger UI: `http://localhost:8000/docs`
     - Health check: `http://localhost:8000/health`
 
+### Docker Workflow (Day-to-Day)
+
+Avoid `docker-compose down && up` — it tears down Redis, Postgres, and Ollama needlessly, forcing full re-init including Ollama's healthcheck chain (~50s penalty).
+
+| Scenario | Command |
+|---|---|
+| Code change (most common) | `docker-compose restart app worker` |
+| New Python dependency added | `docker-compose up -d --build --no-deps app worker` |
+| Full reset (volume wipe, schema change) | `docker-compose down && docker-compose up -d` |
+
+Code changes are reflected immediately on restart because `.:/app` is a live volume mount — no rebuild needed.
+
 ### Local Development (without Docker)
 
 #### 1. System dependencies
