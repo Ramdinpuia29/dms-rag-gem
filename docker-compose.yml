@@ -14,7 +14,8 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      # Qdrant image has no curl. Use TCP check.
+      test: ["CMD-SHELL", "(echo > /dev/tcp/127.0.0.1/6333) || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -25,10 +26,10 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    # Auto-pull the model on start. Using pull instead of run for non-interactive.
+    # Auto-pull the model on start.
     entrypoint: /bin/sh -c "ollama serve & sleep 5 && ollama pull llama3 && wait"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      test: ["CMD", "ollama", "list"]
       interval: 10s
       timeout: 5s
       retries: 5
