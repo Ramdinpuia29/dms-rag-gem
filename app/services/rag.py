@@ -87,4 +87,47 @@ class RAGService:
             "sources": sources
         }
 
+    def ask_stream(self, query: str):
+        """
+        Streams an answer using the RAG pipeline.
+        Yields: dicts for sources and tokens.
+        """
+        system_prompt = (
+            "Answer ONLY based on the provided context. "
+            "If the answer is not in the context, explicitly say: 'Information not available.' "
+            "No hallucinations. Provide source citations."
+        )
+        
+        retriever = VectorIndexRetriever(
+            index=self.index, 
+            similarity_top_k=10,
+            vector_store_query_mode="hybrid"
+        )
+        
+        # Build query engine with streaming enabled
+        query_engine = RetrieverQueryEngine.from_args(
+            retriever=retriever,
+            node_postprocessors=[self.reranker],
+            system_prompt=system_prompt,
+            streaming=True
+        )
+        
+        streaming_response = query_engine.query(query)
+        
+        # Yield sources first
+        sources = []
+        for node in streaming_response.source_nodes:
+            sources.append({
+                "content": node.node.get_content()[:200] + "...",
+                "metadata": node.node.metadata,
+                "score": node.score
+            })
+        yield {"type": "sources", "data": sources}
+        
+        # Yield tokens
+        for token in streaming_response.response_gen:
+            yield {"type": "token", "data": token}
+            
+        yield {"type": "done"}
+
 rag_service = RAGService()

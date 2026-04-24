@@ -11,6 +11,10 @@ mock_modules = [
     "llama_index.core.retrievers",
     "llama_index.core.query_engine",
     "llama_index.core.postprocessor",
+    "llama_index.postprocessor",
+    "llama_index.postprocessor.sbert_rerank",
+    "llama_index.core.vector_stores",
+    "llama_index.core.vector_stores.types",
     "llama_index.llms.ollama",
     "llama_index.embeddings.huggingface",
     "llama_index.vector_stores.postgres",
@@ -25,6 +29,8 @@ for mod in mock_modules:
     sys.modules[mod] = MagicMock()
 
 # Mock initializations and specific service objects
+import app.services.ingestion
+import app.services.rag
 with patch("app.services.ingestion.init_ingestion_settings"), \
      patch("app.services.rag.rag_service.initialize"):
     from app.main import app
@@ -122,6 +128,28 @@ class TestRAGAcceptance(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("Information not available", response.json()["answer"])
+
+    @patch("app.api.v1.ask.rag_service")
+    def test_ac_stream(self, mock_rag_service):
+        """Test streaming endpoint"""
+        mock_rag_service.ask_stream.return_value = [
+            {"type": "sources", "data": []},
+            {"type": "token", "data": "Test"},
+            {"type": "done"}
+        ]
+
+        response = self.client.post(
+            "/api/v1/ask/stream",
+            json={"query": "what is the answer?"}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/event-stream", response.headers["content-type"])
+        
+        lines = response.text.strip().split("\n\n")
+        self.assertIn('{"type": "sources", "data": []}', lines[0])
+        self.assertIn('{"type": "token", "data": "Test"}', lines[1])
+        self.assertIn('{"type": "done"}', lines[2])
 
     @patch("app.api.v1.documents.delete_document")
     def test_ac_007_delete_document(self, mock_delete):
