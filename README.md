@@ -11,6 +11,7 @@ A production-ready, **100% local** Retrieval-Augmented Generation (RAG) microser
 - **Multi-Format Ingestion:** Supports PDF, Office docs (.docx, .xlsx), images, and plain text (.md, .txt, .csv).
 - **OCR Integration:** Built-in Tesseract OCR for processing scanned PDFs and images (via LlamaIndex readers).
 - **Async Processing:** Scalable background ingestion using Celery and Redis.
+- **Real-time Streaming:** Low-latency response streaming using Server-Sent Events (SSE).
 - **Strict RAG Logic:** Engineered prompts ensure the LLM answers ONLY from provided context, preventing hallucinations and providing verifiable citations.
 
 ## 🛠 Tech Stack
@@ -127,12 +128,18 @@ Get a citation-backed answer from your documents.
 - **Endpoint:** `POST /api/v1/ask/`
 - **Payload:** `{"query": "Your question here"}`
 
-### 4. Search
+### 4. Ask with Streaming
+Get real-time token streaming with citations via SSE.
+- **Endpoint:** `POST /api/v1/ask/stream`
+- **Payload:** `{"query": "Your question here"}`
+- **Events:** `sources`, `token`, `done`, `error`.
+
+### 5. Search
 Raw retrieval with reranking.
 - **Endpoint:** `POST /api/v1/search/`
 - **Payload:** `{"query": "Search keywords", "limit": 10}`
 
-### 5. Health Check
+### 6. Health Check
 Verify connectivity to Postgres and other services.
 - **Endpoint:** `GET /health`
 
