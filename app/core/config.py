@@ -7,5 +7,6 @@ class Settings(BaseSettings):
     MODEL_NAME: str = "llama3"
     EMBED_MODEL: str = "BAAI/bge-m3"
     RERANK_MODEL: str = "BAAI/bge-reranker-v2-m3"
+    UPLOAD_DIR: str = "/app/uploads"
 
 settings = Settings()

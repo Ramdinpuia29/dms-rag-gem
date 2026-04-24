@@ -6,14 +6,18 @@ from llama_index.core.node_parser import SentenceSplitter
 from app.core.config import settings
 from app.utils.parsers import parse_file
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Global Settings
-Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
-Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
+def init_ingestion_settings():
+    """
+    Initializes global LlamaIndex settings.
+    """
+    Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+    Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
 def get_vector_store():
     client = QdrantClient(url=settings.QDRANT_URL)
@@ -56,6 +60,10 @@ def ingest_document(file_path: str, metadata: dict):
     except Exception as e:
         logger.error(f"Error ingesting document {file_path}: {str(e)}")
         raise e
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Cleaned up file: {file_path}")
 
 def delete_document(document_id: str):
     """

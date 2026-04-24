@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.rag import rag_service
 
@@ -9,5 +9,8 @@ class AskRequest(BaseModel):
 
 @router.post("/")
 async def ask_api(request: AskRequest):
-    response = rag_service.ask(request.query)
-    return response
+    try:
+        response = rag_service.ask(request.query)
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

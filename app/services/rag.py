@@ -9,6 +9,14 @@ from app.core.config import settings
 
 class RAGService:
     def __init__(self):
+        self.vector_store = None
+        self.index = None
+        self.reranker = None
+
+    def initialize(self):
+        """
+        Initializes the RAG service components.
+        """
         # Ensure global settings are consistent
         Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
         Settings.llm = Ollama(model=settings.MODEL_NAME, base_url=settings.OLLAMA_URL, request_timeout=120.0)

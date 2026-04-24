@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.worker.tasks import ingest_document_task, celery_app
 from app.services.ingestion import delete_document
+from app.core.config import settings
 from celery.result import AsyncResult
 import shutil
 import os
@@ -8,13 +9,12 @@ import uuid
 
 router = APIRouter()
 
-TEMP_DIR = "/tmp/rag_uploads"
-os.makedirs(TEMP_DIR, exist_ok=True)
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
 @router.post("/ingest")
 async def ingest_document_api(file: UploadFile = File(...)):
     file_id = str(uuid.uuid4())
-    file_path = os.path.join(TEMP_DIR, f"{file_id}_{file.filename}")
+    file_path = os.path.join(settings.UPLOAD_DIR, f"{file_id}_{file.filename}")
     
     try:
         with open(file_path, "wb") as buffer:
