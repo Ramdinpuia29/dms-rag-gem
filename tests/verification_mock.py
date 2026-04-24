@@ -31,8 +31,7 @@ for mod in mock_modules:
 # Mock initializations and specific service objects
 import app.services.ingestion
 import app.services.rag
-with patch("app.services.ingestion.init_ingestion_settings"), \
-     patch("app.services.rag.rag_service.initialize"):
+with patch("app.services.rag.rag_service.initialize"):
     from app.main import app
 
 from fastapi.testclient import TestClient

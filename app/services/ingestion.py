@@ -13,6 +13,10 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global models for reuse
+embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
+
 def get_vector_store():
     url = make_url(settings.DATABASE_URL)
     return PGVectorStore.from_params(
@@ -41,15 +45,11 @@ def ingest_document(file_path: str, metadata: dict):
         for doc in documents:
             doc.metadata.update(metadata)
             
-        # 3. Instantiate local models instead of global Settings
-        embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
-        node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
-        
-        # 4. Initialize Vector Store and Storage Context
+        # 3. Initialize Vector Store and Storage Context
         vector_store = get_vector_store()
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         
-        # 5. Create Index (and store nodes)
+        # 4. Create Index (and store nodes)
         VectorStoreIndex.from_documents(
             documents,
             storage_context=storage_context,

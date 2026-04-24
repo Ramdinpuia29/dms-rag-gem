@@ -2,12 +2,10 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.api.v1 import documents, search, ask, health
 from app.services.rag import rag_service
-from app.services.ingestion import init_ingestion_settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize services
-    init_ingestion_settings()
     rag_service.initialize()
     yield
 
