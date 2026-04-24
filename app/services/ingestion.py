@@ -21,8 +21,10 @@ def init_ingestion_settings():
     Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
 def get_vector_store():
+    # Ensure global Settings are initialized before creating vector store
+    init_ingestion_settings()
+    
     url = make_url(settings.DATABASE_URL)
-    embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
     return PGVectorStore.from_params(
         host=url.host,
         port=url.port,
@@ -32,8 +34,7 @@ def get_vector_store():
         table_name="documents",
         embed_dim=1024,  # BGE-M3 dimension
         hybrid_search=True,
-        text_search_config="english",
-        embed_model=embed_model
+        text_search_config="english"
     )
 
 def ingest_document(file_path: str, metadata: dict):
