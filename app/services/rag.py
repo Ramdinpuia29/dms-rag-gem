@@ -38,14 +38,30 @@ class RAGService:
             model_name=settings.EMBED_MODEL,
             embed_batch_size=settings.EMBED_BATCH_SIZE
         )
-        Settings.llm = Ollama(
-            model=settings.MODEL_NAME,
-            base_url=settings.OLLAMA_URL,
-            request_timeout=settings.LLM_REQUEST_TIMEOUT,
-        )
+        
+        # Retry logic for Ollama model availability
+        max_retries = 10
+        retry_delay = 10
+        for i in range(max_retries):
+            try:
+                self.llm = Ollama(
+                    model=settings.MODEL_NAME,
+                    base_url=settings.OLLAMA_URL,
+                    request_timeout=settings.LLM_REQUEST_TIMEOUT,
+                )
+                # Trigger a metadata check to see if model is loaded
+                _ = self.llm.metadata
+                logger.info(f"Ollama model {settings.MODEL_NAME} is ready")
+                break
+            except Exception as e:
+                if i == max_retries - 1:
+                    logger.error(f"Ollama model not ready after {max_retries} retries: {str(e)}")
+                    raise e
+                logger.warning(f"Waiting for Ollama model {settings.MODEL_NAME}... (attempt {i+1}/{max_retries})")
+                import time
+                time.sleep(retry_delay)
 
-        self.embed_model = Settings.embed_model
-        self.llm = Settings.llm
+        Settings.llm = self.llm
 
         self.vector_store = get_vector_store()
         self.index = VectorStoreIndex.from_vector_store(

@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/dms_rag"
     OLLAMA_URL: str = "http://localhost:11434"
-    MODEL_NAME: str = "phi3:mini"
+    MODEL_NAME: str = "phi3"
     EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"
     RERANK_MODEL: str = "BAAI/bge-reranker-base"
     UPLOAD_DIR: str = "/app/uploads"
