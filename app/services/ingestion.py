@@ -1,6 +1,6 @@
 from llama_index.vector_stores.postgres import PGVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core import StorageContext, VectorStoreIndex, Settings
+from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores.types import MetadataFilters, ExactMatchFilter
 from sqlalchemy import make_url
@@ -13,17 +13,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def init_ingestion_settings():
-    """
-    Initializes global LlamaIndex settings.
-    """
-    Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
-    Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
-
 def get_vector_store():
-    # Ensure global Settings are initialized before creating vector store
-    init_ingestion_settings()
-    
     url = make_url(settings.DATABASE_URL)
     return PGVectorStore.from_params(
         host=url.host,
@@ -34,7 +24,7 @@ def get_vector_store():
         table_name="documents",
         embed_dim=1024,  # BGE-M3 dimension
         hybrid_search=True,
-        text_search_config="english"
+        text_search_config="simple" # Changed from "english"
     )
 
 def ingest_document(file_path: str, metadata: dict):
@@ -50,16 +40,21 @@ def ingest_document(file_path: str, metadata: dict):
         # 2. Add metadata
         for doc in documents:
             doc.metadata.update(metadata)
+            
+        # 3. Instantiate local models instead of global Settings
+        embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+        node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
         
-        # 3. Initialize Vector Store and Storage Context
+        # 4. Initialize Vector Store and Storage Context
         vector_store = get_vector_store()
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         
-        # 4. Create Index (and store nodes)
-        # VectorStoreIndex.from_documents will insert documents into the vector store
+        # 5. Create Index (and store nodes)
         VectorStoreIndex.from_documents(
             documents,
             storage_context=storage_context,
+            embed_model=embed_model,
+            transformations=[node_parser],
             show_progress=False
         )
         
