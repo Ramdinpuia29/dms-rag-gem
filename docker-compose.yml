@@ -57,6 +57,7 @@ services:
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/dms_rag
       - OLLAMA_URL=http://ollama:11434
       - HF_HOME=/root/.cache/huggingface
+      - HF_TOKEN=${HF_TOKEN}
     ports:
       - "8000:8000"
     depends_on:
@@ -80,6 +81,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/dms_rag
       - HF_HOME=/root/.cache/huggingface
+      - HF_TOKEN=${HF_TOKEN}
     depends_on:
       redis:
         condition: service_healthy
