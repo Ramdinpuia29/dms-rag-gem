@@ -17,3 +17,5 @@ pytesseract
 unstructured[all-docs]
 python-dotenv
 pydantic-settings
+httpx
+requests
