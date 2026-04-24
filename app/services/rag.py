@@ -1,4 +1,4 @@
-from llama_index.core import VectorStoreIndex
+from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.postprocessor.sbert_rerank import SentenceTransformerRerank
@@ -19,12 +19,15 @@ class RAGService:
         """
         Initializes the RAG service components.
         """
-        # Explicitly instantiate models
-        self.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
-        self.llm = Ollama(model=settings.MODEL_NAME, base_url=settings.OLLAMA_URL, request_timeout=120.0)
+        # Set global settings as many components still rely on them
+        Settings.embed_model = HuggingFaceEmbedding(model_name=settings.EMBED_MODEL)
+        Settings.llm = Ollama(model=settings.MODEL_NAME, base_url=settings.OLLAMA_URL, request_timeout=120.0)
+        
+        self.embed_model = Settings.embed_model
+        self.llm = Settings.llm
         
         self.vector_store = get_vector_store()
-        # Pass embed_model explicitly
+        # Pass embed_model explicitly as well
         self.index = VectorStoreIndex.from_vector_store(
             self.vector_store,
             embed_model=self.embed_model
