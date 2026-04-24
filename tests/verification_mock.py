@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 # Mock heavy dependencies
 mock_modules = [
-    "qdrant_client",
+    "sqlalchemy",
+    "sqlalchemy.orm",
     "llama_index",
     "llama_index.core",
     "llama_index.core.retrievers",
@@ -12,7 +13,7 @@ mock_modules = [
     "llama_index.core.postprocessor",
     "llama_index.llms.ollama",
     "llama_index.embeddings.huggingface",
-    "llama_index.vector_stores.qdrant",
+    "llama_index.vector_stores.postgres",
     "llama_index.core.node_parser",
     "llama_index.core.storage_context",
     "celery",

@@ -1,8 +1,9 @@
-from qdrant_client import QdrantClient
-from llama_index.vector_stores.qdrant import QdrantVectorStore
+from llama_index.vector_stores.postgres import PGVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import StorageContext, VectorStoreIndex, Settings
 from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.vector_stores.types import MetadataFilters, ExactMatchFilter
+from sqlalchemy import make_url
 from app.core.config import settings
 from app.utils.parsers import parse_file
 import logging
@@ -20,18 +21,22 @@ def init_ingestion_settings():
     Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
 
 def get_vector_store():
-    client = QdrantClient(url=settings.QDRANT_URL)
-    return QdrantVectorStore(
-        client=client, 
-        collection_name="documents",
-        enable_hybrid=True,
-        fastembed_sparse_model="Qdrant/bm25",
-        batch_size=20
+    url = make_url(settings.DATABASE_URL)
+    return PGVectorStore.from_params(
+        host=url.host,
+        port=url.port,
+        database=url.database,
+        user=url.username,
+        password=url.password,
+        table_name="documents",
+        embed_dim=1024,  # BGE-M3 dimension
+        hybrid_search=True,
+        text_search_config="english"
     )
 
 def ingest_document(file_path: str, metadata: dict):
     """
-    Parses a document, chunks it, embeds it, and stores it in Qdrant.
+    Parses a document, chunks it, embeds it, and stores it in PostgreSQL.
     """
     try:
         logger.info(f"Starting ingestion for: {file_path}")
@@ -68,23 +73,16 @@ def ingest_document(file_path: str, metadata: dict):
 
 def delete_document(document_id: str):
     """
-    Deletes a document from Qdrant by its document_id metadata.
+    Deletes a document from PostgreSQL by its document_id metadata.
     """
     try:
-        client = QdrantClient(url=settings.QDRANT_URL)
-        client.delete(
-            collection_name="documents",
-            points_selector=models.FilterSelector(
-                filter=models.Filter(
-                    must=[
-                        models.FieldCondition(
-                            key="document_id",
-                            match=models.MatchValue(value=document_id),
-                        ),
-                    ],
-                )
-            )
+        vector_store = get_vector_store()
+        filters = MetadataFilters(
+            filters=[
+                ExactMatchFilter(key="document_id", value=document_id)
+            ]
         )
+        vector_store.delete_nodes(filters=filters)
         logger.info(f"Successfully deleted document: {document_id}")
         return {"status": "success", "document_id": document_id}
     except Exception as e:

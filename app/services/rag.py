@@ -31,7 +31,7 @@ class RAGService:
 
     def hybrid_search(self, query: str, limit: int = 10):
         """
-        Performs hybrid search (dense + sparse) using Qdrant.
+        Performs hybrid search (dense + sparse) using PostgreSQL.
         """
         retriever = VectorIndexRetriever(
             index=self.index,

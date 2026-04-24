@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 import redis
-from qdrant_client import QdrantClient
+from sqlalchemy import create_engine, text
 import httpx
 from app.core.config import settings
 
@@ -15,7 +15,7 @@ async def health_check():
         "status": "healthy",
         "services": {
             "redis": "unknown",
-            "qdrant": "unknown",
+            "postgres": "unknown",
             "ollama": "unknown"
         }
     }
@@ -32,14 +32,14 @@ async def health_check():
         status["services"]["redis"] = f"unhealthy: {str(e)}"
         status["status"] = "degraded"
 
-    # Check Qdrant
+    # Check Postgres
     try:
-        client = QdrantClient(url=settings.QDRANT_URL)
-        # Using get_collections as a simple connectivity test
-        client.get_collections()
-        status["services"]["qdrant"] = "healthy"
+        engine = create_engine(settings.DATABASE_URL)
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        status["services"]["postgres"] = "healthy"
     except Exception as e:
-        status["services"]["qdrant"] = f"unhealthy: {str(e)}"
+        status["services"]["postgres"] = f"unhealthy: {str(e)}"
         status["status"] = "degraded"
 
     # Check Ollama
