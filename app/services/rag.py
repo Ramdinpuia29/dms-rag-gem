@@ -1,7 +1,7 @@
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.postprocessor import SentenceTransformerRerank
+from llama_index.postprocessor.sbert_rerank import SentenceTransformerRerank
 from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from app.services.ingestion import get_vector_store
