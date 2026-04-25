@@ -34,10 +34,11 @@ class RAGService:
         self._cache: redis_lib.Redis | None = None
 
     def initialize(self):
-        Settings.embed_model = HuggingFaceEmbedding(
+        self.embed_model = HuggingFaceEmbedding(
             model_name=settings.EMBED_MODEL,
             embed_batch_size=settings.EMBED_BATCH_SIZE
         )
+        Settings.embed_model = self.embed_model
         
         # Retry logic for Ollama model availability
         max_retries = 10
@@ -71,13 +72,13 @@ class RAGService:
 
         self.reranker = SentenceTransformerRerank(
             model=settings.RERANK_MODEL,
-            top_n=5,
+            top_n=3, # Reduced for speed
         )
 
-        # Build once, reuse across all requests — avoid per-request reconstruction overhead
+        # Build once, reuse across all requests
         self._retriever = VectorIndexRetriever(
             index=self.index,
-            similarity_top_k=10,
+            similarity_top_k=20, # Increased for better hybrid coverage
             vector_store_query_mode="hybrid",
         )
         self._query_engine = RetrieverQueryEngine.from_args(
