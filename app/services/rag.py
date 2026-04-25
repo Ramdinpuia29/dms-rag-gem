@@ -70,26 +70,19 @@ class RAGService:
             embed_model=self.embed_model,
         )
 
-        self.reranker = SentenceTransformerRerank(
-            model=settings.RERANK_MODEL,
-            top_n=3, # Reduced for speed
-        )
-
         # Build once, reuse across all requests
         self._retriever = VectorIndexRetriever(
             index=self.index,
-            similarity_top_k=20, # Increased for better hybrid coverage
+            similarity_top_k=5, # Reduced for speed, rely on hybrid quality
             vector_store_query_mode="hybrid",
         )
         self._query_engine = RetrieverQueryEngine.from_args(
             retriever=self._retriever,
-            node_postprocessors=[self.reranker],
             system_prompt=_SYSTEM_PROMPT,
             llm=self.llm,
         )
         self._streaming_query_engine = RetrieverQueryEngine.from_args(
             retriever=self._retriever,
-            node_postprocessors=[self.reranker],
             system_prompt=_SYSTEM_PROMPT,
             streaming=True,
             llm=self.llm,
